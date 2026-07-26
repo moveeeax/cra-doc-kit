@@ -1,0 +1,51 @@
+# Analyst decisions that drive the OpenVEX document.
+#
+# One entry per vulnerability. Anything not listed here is emitted as
+# under_investigation — the tool never decides "not affected" on your behalf.
+#
+#   status: not_affected | affected | fixed | under_investigation
+#   justification (not_affected only, one of):
+#     component_not_present
+#     vulnerable_code_not_present
+#     vulnerable_code_not_in_execute_path
+#     vulnerable_code_cannot_be_controlled_by_adversary
+#     inline_mitigations_already_exist
+#   action: required when status is affected
+
+author: Acme Software GmbH Product Security
+role: Manufacturer
+
+statements:
+  - vulnerability: CVE-2021-44228
+    products:
+      - pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1
+    status: not_affected
+    justification: vulnerable_code_not_in_execute_path
+    impact: >-
+      Message lookups are disabled in the shipped log4j2.xml and the container
+      starts with -Dlog4j2.formatMsgNoLookups=true. No user-controlled value
+      reaches a logged message pattern.
+
+  - vulnerability: CVE-2020-8203
+    status: not_affected
+    justification: vulnerable_code_not_in_execute_path
+    impact: >-
+      lodash is bundled only for the admin UI, which does not call zipObjectDeep
+      or any other deep-merge helper reachable from user input.
+
+  - vulnerability: CVE-2020-36518
+    status: not_affected
+    justification: inline_mitigations_already_exist
+    impact: >-
+      The Jackson ObjectMapper is configured with StreamReadConstraints
+      maxNestingDepth=100 for every externally reachable endpoint.
+
+  - vulnerability: CVE-2023-45857
+    status: affected
+    action: >-
+      Upgrade axios to 1.6.7 in release 4.7.0, planned for 2026-08-15. Until
+      then the admin UI is served from the same origin as the API and no
+      third-party host receives the XSRF cookie.
+
+# CVE-2023-44487 is deliberately absent: it is still being assessed, so it is
+# emitted as under_investigation.
