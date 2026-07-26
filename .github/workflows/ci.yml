@@ -1,0 +1,75 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          check-latest: true
+          cache: true
+
+      - name: Check formatting
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "These files are not gofmt-clean:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Build
+        run: go build ./...
+
+      - name: Test
+        run: go test -race -coverprofile=coverage.out ./...
+
+      - name: Smoke test the CLI on the example deliverables
+        run: |
+          set -euo pipefail
+          go build -o bin/cra-doc-kit ./cmd/cra-doc-kit
+          mkdir -p out
+          ./bin/cra-doc-kit vex \
+            --scan examples/scan.grype.json \
+            --triage examples/triage.yaml \
+            --profile examples/product.yaml \
+            --out out/vex.json
+          ./bin/cra-doc-kit annex \
+            --sbom examples/sbom.cdx.json \
+            --profile examples/product.yaml \
+            --scan examples/scan.grype.json \
+            --vex out/vex.json \
+            --out out/annex-vii.md
+          # The example SBOM ships a deliberate gap, so gapcheck is expected to
+          # exit 1 here. That it does is part of what is being tested.
+          ./bin/cra-doc-kit gapcheck \
+            --sbom examples/sbom.cdx.json \
+            --scan examples/scan.grype.json \
+            --vex out/vex.json \
+            --out out/gap-check.md && rc=0 || rc=$?
+          if [ "$rc" -ne 1 ]; then
+            echo "gapcheck exited $rc, expected 1 for the example inputs"
+            exit 1
+          fi
+
+      - name: Upload the generated deliverables
+        uses: actions/upload-artifact@v4
+        with:
+          name: example-deliverables
+          path: out/
+          if-no-files-found: error
