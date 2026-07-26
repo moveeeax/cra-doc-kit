@@ -1,0 +1,108 @@
+{
+  "@context": "https://openvex.dev/ns/v0.2.0",
+  "@id": "https://openvex.dev/docs/public/vex-d9b555e8545b06fdcc5fd3545cd3564fabe7053296bbe74ac7c7b4aa7e833144",
+  "author": "Acme Software GmbH",
+  "role": "Manufacturer",
+  "timestamp": "2026-07-20T10:00:00Z",
+  "version": 1,
+  "tooling": "cra-doc-kit dev",
+  "statements": [
+    {
+      "vulnerability": {
+        "name": "CVE-2020-36518",
+        "description": "jackson-databind allows a Java StackOverflow exception and denial of service via a large depth of nested objects."
+      },
+      "timestamp": "2026-07-20T10:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/ledger-gateway@sha256:9f2c1e4b6a7d8c3f5b0e1a2d4c6f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f?repository_url=registry.example.com/acme/ledger-gateway",
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.13.0"
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "inline_mitigations_already_exist",
+      "impact_statement": "The Jackson ObjectMapper is configured with StreamReadConstraints maxNestingDepth=100 for every externally reachable endpoint."
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2020-8203",
+        "description": "Prototype pollution in lodash via zipObjectDeep."
+      },
+      "timestamp": "2026-07-20T10:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/ledger-gateway@sha256:9f2c1e4b6a7d8c3f5b0e1a2d4c6f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f?repository_url=registry.example.com/acme/ledger-gateway",
+          "subcomponents": [
+            {
+              "@id": "pkg:npm/lodash@4.17.15"
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "lodash is bundled only for the admin UI, which does not call zipObjectDeep or any other deep-merge helper reachable from user input."
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2021-44228",
+        "description": "Apache Log4j2 JNDI features do not protect against attacker controlled LDAP and other JNDI related endpoints."
+      },
+      "timestamp": "2026-07-20T10:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/ledger-gateway@sha256:9f2c1e4b6a7d8c3f5b0e1a2d4c6f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f?repository_url=registry.example.com/acme/ledger-gateway",
+          "subcomponents": [
+            {
+              "@id": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"
+            }
+          ]
+        }
+      ],
+      "status": "not_affected",
+      "justification": "vulnerable_code_not_in_execute_path",
+      "impact_statement": "Message lookups are disabled in the shipped log4j2.xml and the container starts with -Dlog4j2.formatMsgNoLookups=true. No user-controlled value reaches a logged message pattern."
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2023-44487",
+        "description": "The HTTP/2 protocol allows a denial of service because request cancellation can reset many streams quickly."
+      },
+      "timestamp": "2026-07-20T10:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/ledger-gateway@sha256:9f2c1e4b6a7d8c3f5b0e1a2d4c6f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f?repository_url=registry.example.com/acme/ledger-gateway",
+          "subcomponents": [
+            {
+              "@id": "pkg:golang/golang.org/x/net@v0.15.0"
+            }
+          ]
+        }
+      ],
+      "status": "under_investigation"
+    },
+    {
+      "vulnerability": {
+        "name": "CVE-2023-45857",
+        "description": "axios inserts the X-XSRF-TOKEN header using the secret XSRF-TOKEN cookie value in all requests to any host."
+      },
+      "timestamp": "2026-07-20T10:00:00Z",
+      "products": [
+        {
+          "@id": "pkg:oci/ledger-gateway@sha256:9f2c1e4b6a7d8c3f5b0e1a2d4c6f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f?repository_url=registry.example.com/acme/ledger-gateway",
+          "subcomponents": [
+            {
+              "@id": "pkg:npm/axios@1.5.0"
+            }
+          ]
+        }
+      ],
+      "status": "affected",
+      "action_statement": "Upgrade axios to 1.6.7 in release 4.7.0, planned for 2026-08-15. Until then the admin UI is served from the same origin as the API and no third-party host receives the XSRF cookie."
+    }
+  ]
+}

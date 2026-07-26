@@ -1,0 +1,138 @@
+{
+  "product": "ledger-gateway 4.6.2",
+  "sbom": "examples/sbom.cdx.json",
+  "scan": "examples/scan.grype.json",
+  "vex": "examples/vex.json",
+  "generated": "2026-07-20T10:00:00Z",
+  "findings": [
+    {
+      "rule": "SBOM-007",
+      "title": "Every component carries a package URL",
+      "severity": "blocker",
+      "reference": "Annex I Part II(1)",
+      "detail": "1 of 9 components has no purl; VEX statements cannot reference them unambiguously.",
+      "evidence": [
+        "acme-crypto-helpers@1.2.0"
+      ]
+    },
+    {
+      "rule": "SBOM-008",
+      "title": "Components identify their supplier",
+      "severity": "warning",
+      "reference": "Annex VII(2)(b)",
+      "detail": "1 of 9 components name no supplier, author or publisher.",
+      "evidence": [
+        "pkg:npm/left-pad@1.3.0"
+      ]
+    },
+    {
+      "rule": "SBOM-009",
+      "title": "Components declare licence information",
+      "severity": "warning",
+      "reference": "Annex VII(2)(b)",
+      "detail": "2 of 9 components declare no licence.",
+      "evidence": [
+        "acme-crypto-helpers@1.2.0",
+        "pkg:npm/left-pad@1.3.0"
+      ]
+    },
+    {
+      "rule": "VULN-003",
+      "title": "No vulnerability is left under investigation at release",
+      "severity": "warning",
+      "reference": "Annex I Part II(2)",
+      "detail": "1 finding is still under_investigation. That is an honest state to ship, but it must be closed before the technical file is signed.",
+      "evidence": [
+        "CVE-2023-44487 (High) golang.org/x/net"
+      ]
+    },
+    {
+      "rule": "ECO-001",
+      "title": "Package ecosystems are within the tested coverage",
+      "severity": "info",
+      "reference": "cra-doc-kit scope",
+      "detail": "npm: 3, golang: 2, maven: 2, pypi: 1, unknown: 1. Ecosystems outside golang/maven/npm are reported but not covered by the fixed-price scope.",
+      "evidence": [
+        "pypi",
+        "unknown"
+      ]
+    },
+    {
+      "rule": "SBOM-010",
+      "title": "Components carry integrity hashes",
+      "severity": "info",
+      "reference": "Annex I Part I(2)(f)",
+      "detail": "2 of 9 components carry a hash. Hashes are not required by the CRA but make the SBOM verifiable against the shipped artefact."
+    },
+    {
+      "rule": "SBOM-001",
+      "title": "SBOM is in a commonly used machine-readable format",
+      "severity": "pass",
+      "reference": "Annex I Part II(1)",
+      "detail": "CycloneDX 1.5."
+    },
+    {
+      "rule": "SBOM-002",
+      "title": "SBOM names the product it describes",
+      "severity": "pass",
+      "reference": "Annex VII(1)(a)-(b)",
+      "detail": "ledger-gateway 4.6.2."
+    },
+    {
+      "rule": "SBOM-003",
+      "title": "SBOM records when it was produced",
+      "severity": "pass",
+      "reference": "Annex I Part II(1)",
+      "detail": "2026-07-20T09:14:02Z"
+    },
+    {
+      "rule": "SBOM-004",
+      "title": "SBOM records who or what produced it",
+      "severity": "pass",
+      "reference": "Annex VII(2)(b)",
+      "detail": "syft 1.18.1, Acme Software GmbH Release Engineering"
+    },
+    {
+      "rule": "SBOM-005",
+      "title": "SBOM lists components",
+      "severity": "pass",
+      "reference": "Annex I Part II(1)",
+      "detail": "9 components."
+    },
+    {
+      "rule": "SBOM-006",
+      "title": "Every component carries a version",
+      "severity": "pass",
+      "reference": "Annex I Part II(1)",
+      "detail": "All components are versioned."
+    },
+    {
+      "rule": "SBOM-011",
+      "title": "Top-level dependencies are identifiable",
+      "severity": "pass",
+      "reference": "Annex I Part II(1)",
+      "detail": "4 direct dependencies declared."
+    },
+    {
+      "rule": "VULN-001",
+      "title": "Known vulnerabilities are enumerated",
+      "severity": "pass",
+      "reference": "Annex I Part I(2)(a)",
+      "detail": "grype 0.87.0 scanned the product: Critical: 1, High: 3, Medium: 1"
+    },
+    {
+      "rule": "VULN-002",
+      "title": "Every known vulnerability has a documented decision",
+      "severity": "pass",
+      "reference": "Annex I Part II(2)",
+      "detail": "All 5 findings are covered by a VEX statement."
+    }
+  ],
+  "counts": {
+    "blocker": 1,
+    "warning": 3,
+    "info": 2,
+    "pass": 9
+  },
+  "components": 9
+}
