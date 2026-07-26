@@ -1,0 +1,83 @@
+{
+  "matches": [
+    {
+      "vulnerability": {
+        "id": "CVE-2021-44228",
+        "severity": "Critical",
+        "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2021-44228",
+        "description": "Apache Log4j2 JNDI features do not protect against attacker controlled LDAP and other JNDI related endpoints.",
+        "fix": { "versions": ["2.15.0"], "state": "fixed" }
+      },
+      "artifact": {
+        "name": "log4j-core",
+        "version": "2.14.1",
+        "type": "java-archive",
+        "purl": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "CVE-2023-44487",
+        "severity": "High",
+        "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2023-44487",
+        "description": "The HTTP/2 protocol allows a denial of service because request cancellation can reset many streams quickly.",
+        "fix": { "versions": ["v0.17.0"], "state": "fixed" }
+      },
+      "artifact": {
+        "name": "golang.org/x/net",
+        "version": "v0.15.0",
+        "type": "go-module",
+        "purl": "pkg:golang/golang.org/x/net@v0.15.0"
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "CVE-2020-36518",
+        "severity": "High",
+        "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2020-36518",
+        "description": "jackson-databind allows a Java StackOverflow exception and denial of service via a large depth of nested objects.",
+        "fix": { "versions": ["2.13.2.1"], "state": "fixed" }
+      },
+      "artifact": {
+        "name": "jackson-databind",
+        "version": "2.13.0",
+        "type": "java-archive",
+        "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.13.0"
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "CVE-2020-8203",
+        "severity": "High",
+        "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2020-8203",
+        "description": "Prototype pollution in lodash via zipObjectDeep.",
+        "fix": { "versions": ["4.17.19"], "state": "fixed" }
+      },
+      "artifact": {
+        "name": "lodash",
+        "version": "4.17.15",
+        "type": "npm",
+        "purl": "pkg:npm/lodash@4.17.15"
+      }
+    },
+    {
+      "vulnerability": {
+        "id": "CVE-2023-45857",
+        "severity": "Medium",
+        "dataSource": "https://nvd.nist.gov/vuln/detail/CVE-2023-45857",
+        "description": "axios inserts the X-XSRF-TOKEN header using the secret XSRF-TOKEN cookie value in all requests to any host.",
+        "fix": { "versions": ["1.6.0"], "state": "fixed" }
+      },
+      "artifact": {
+        "name": "axios",
+        "version": "1.5.0",
+        "type": "npm",
+        "purl": "pkg:npm/axios@1.5.0"
+      }
+    }
+  ],
+  "descriptor": {
+    "name": "grype",
+    "version": "0.87.0"
+  }
+}

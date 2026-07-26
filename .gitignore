@@ -1,0 +1,23 @@
+# Build output
+/bin/
+/dist/
+/out/
+cra-doc-kit
+*.exe
+
+# Go
+*.test
+*.out
+coverage.txt
+
+# Local working files — real client SBOMs, scans and profiles never belong in git
+/local/
+*.local.yaml
+*.local.yml
+*.local.json
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,145 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "serialNumber": "urn:uuid:0f6bd2f6-1f8d-4a2a-9f6a-1a0a0c5f2b41",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-07-20T09:14:02Z",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "syft",
+          "version": "1.18.1"
+        }
+      ]
+    },
+    "authors": [
+      {
+        "name": "Acme Software GmbH Release Engineering",
+        "email": "release@example.com"
+      }
+    ],
+    "component": {
+      "bom-ref": "product:ledger-gateway",
+      "type": "container",
+      "name": "ledger-gateway",
+      "version": "4.6.2",
+      "purl": "pkg:oci/ledger-gateway@sha256:9f2c1e4b6a7d8c3f5b0e1a2d4c6f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f?repository_url=registry.example.com/acme/ledger-gateway",
+      "supplier": {
+        "name": "Acme Software GmbH",
+        "url": ["https://www.example.com"]
+      }
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "pkg:golang/github.com/gin-gonic/gin@v1.9.1",
+      "type": "library",
+      "name": "github.com/gin-gonic/gin",
+      "version": "v1.9.1",
+      "purl": "pkg:golang/github.com/gin-gonic/gin@v1.9.1",
+      "author": "gin-gonic",
+      "licenses": [{ "license": { "id": "MIT" } }],
+      "hashes": [
+        { "alg": "SHA-256", "content": "0c1e0a3f1b6e2d3c4a5f6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:golang/golang.org/x/net@v0.15.0",
+      "type": "library",
+      "name": "golang.org/x/net",
+      "version": "v0.15.0",
+      "purl": "pkg:golang/golang.org/x/net@v0.15.0",
+      "author": "The Go Authors",
+      "licenses": [{ "license": { "id": "BSD-3-Clause" } }],
+      "hashes": [
+        { "alg": "SHA-256", "content": "1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60" }
+      ]
+    },
+    {
+      "bom-ref": "pkg:npm/axios@1.5.0",
+      "type": "library",
+      "name": "axios",
+      "version": "1.5.0",
+      "purl": "pkg:npm/axios@1.5.0",
+      "supplier": { "name": "axios contributors" },
+      "licenses": [{ "license": { "id": "MIT" } }]
+    },
+    {
+      "bom-ref": "pkg:npm/lodash@4.17.15",
+      "type": "library",
+      "name": "lodash",
+      "version": "4.17.15",
+      "purl": "pkg:npm/lodash@4.17.15",
+      "supplier": { "name": "John-David Dalton" },
+      "licenses": [{ "license": { "id": "MIT" } }]
+    },
+    {
+      "bom-ref": "pkg:npm/left-pad@1.3.0",
+      "type": "library",
+      "name": "left-pad",
+      "version": "1.3.0",
+      "purl": "pkg:npm/left-pad@1.3.0"
+    },
+    {
+      "bom-ref": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1",
+      "type": "library",
+      "name": "log4j-core",
+      "group": "org.apache.logging.log4j",
+      "version": "2.14.1",
+      "purl": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1",
+      "supplier": { "name": "The Apache Software Foundation" },
+      "licenses": [{ "license": { "id": "Apache-2.0" } }]
+    },
+    {
+      "bom-ref": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.13.0",
+      "type": "library",
+      "name": "jackson-databind",
+      "group": "com.fasterxml.jackson.core",
+      "version": "2.13.0",
+      "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.13.0",
+      "supplier": { "name": "FasterXML" },
+      "licenses": [{ "expression": "Apache-2.0" }]
+    },
+    {
+      "bom-ref": "pkg:pypi/requests@2.28.1",
+      "type": "library",
+      "name": "requests",
+      "version": "2.28.1",
+      "purl": "pkg:pypi/requests@2.28.1",
+      "supplier": { "name": "Python Software Foundation" },
+      "licenses": [{ "license": { "id": "Apache-2.0" } }]
+    },
+    {
+      "bom-ref": "internal:crypto-helpers",
+      "type": "library",
+      "name": "acme-crypto-helpers",
+      "version": "1.2.0",
+      "supplier": { "name": "Acme Software GmbH" }
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "product:ledger-gateway",
+      "dependsOn": [
+        "pkg:golang/github.com/gin-gonic/gin@v1.9.1",
+        "pkg:npm/axios@1.5.0",
+        "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1",
+        "internal:crypto-helpers"
+      ]
+    },
+    {
+      "ref": "pkg:golang/github.com/gin-gonic/gin@v1.9.1",
+      "dependsOn": ["pkg:golang/golang.org/x/net@v0.15.0"]
+    },
+    {
+      "ref": "pkg:npm/axios@1.5.0",
+      "dependsOn": ["pkg:npm/lodash@4.17.15", "pkg:npm/left-pad@1.3.0"]
+    },
+    {
+      "ref": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1",
+      "dependsOn": ["pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.13.0"]
+    }
+  ]
+}
