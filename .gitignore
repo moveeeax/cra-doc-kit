@@ -2,7 +2,8 @@
 /bin/
 /dist/
 /out/
-cra-doc-kit
+# Anchored: an unanchored pattern would also match cmd/cra-doc-kit/
+/cra-doc-kit
 *.exe
 
 # Go
