@@ -1,0 +1,89 @@
+# Product profile — the facts about the product that no tool can derive from an
+# SBOM. Everything left empty is rendered as a visible TODO in the Annex VII
+# skeleton rather than being invented.
+#
+# All values below are fictional placeholders for a fictional company.
+
+product:
+  name: Acme Ledger Gateway
+  version: 4.6.2
+  purl: pkg:oci/ledger-gateway@sha256:9f2c1e4b6a7d8c3f5b0e1a2d4c6f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f?repository_url=registry.example.com/acme/ledger-gateway
+  intended_purpose: >-
+    A self-hosted payment reconciliation gateway. It is deployed by financial
+    institutions inside their own network, exposes an HTTPS API to internal
+    systems and connects outbound to clearing providers. It is not intended for
+    direct exposure to the public internet.
+  description: >-
+    Distributed as a signed OCI image plus a Helm chart. Ships a Go API service,
+    a bundled administrative web UI and a Java plugin runtime that hosts the
+    clearing adapters written for each institution.
+  category: important-class-i
+  support_period_end: "2031-06-30"
+  user_documentation: ""
+
+manufacturer:
+  legal_name: Acme Software GmbH
+  address: Beispielstrasse 1, 10115 Berlin, Germany
+  website: https://www.example.com
+  contact_email: info@example.com
+  security_contact: security@example.com
+
+processes:
+  design_and_development: >-
+    Trunk-based development with mandatory two-reviewer pull requests. Every
+    merge runs unit tests, static analysis, dependency scanning and an SBOM
+    build. Release artefacts are built on ephemeral CI runners from a tagged
+    commit and signed before publication. Threat modelling is repeated whenever
+    an externally reachable interface changes.
+  production: ""
+  vulnerability_handling: >-
+    Dependency scans run on every merge and nightly against the released tags
+    still in support. Findings are triaged within two business days; critical
+    findings reachable from an external interface are patched in a hotfix
+    release within seven calendar days. Every triage decision is recorded as an
+    OpenVEX statement published alongside the release.
+  security_update_policy: >-
+    Security fixes are released as separate patch versions that contain no
+    functional change, are published to the same OCI registry and Helm
+    repository as functional releases, and are announced through the security
+    advisory feed. Updates are free of charge for the whole support period.
+  cvd_policy_url: https://www.example.com/security/disclosure-policy
+  sbom_publication: >-
+    A CycloneDX 1.5 SBOM is attached to every GitHub release and published as an
+    OCI referrer next to the image digest.
+  reporting_runbook: ""
+
+risk:
+  summary: >-
+    The gateway holds credentials for clearing providers and processes
+    transaction data on behalf of the deploying institution. The dominant risks
+    are credential compromise on the outbound connections, tampering with
+    reconciliation results, and denial of service against the transaction API.
+  assessment_date: "2026-06-12"
+  assets:
+    - Clearing provider API credentials held in the gateway keystore
+    - Transaction and reconciliation records at rest
+    - The administrative session of an operator
+  threats:
+    - Credential extraction from a compromised container filesystem
+    - Tampering with reconciliation output through an unauthenticated internal caller
+    - Resource exhaustion of the transaction API by a misbehaving internal client
+  mitigations:
+    - Keystore sealed with a deployment-scoped KMS key, never written to logs
+    - Mutual TLS required on every internal API caller
+    - Per-client rate limiting and bounded request body size on all endpoints
+
+standards: []
+
+tests:
+  - name: External penetration test
+    date: "2026-05-18"
+    scope: API service, admin UI, plugin runtime
+    result: 2 medium findings, both remediated in 4.6.0
+    report: reports/pentest-2026-05.pdf
+
+conformity:
+  procedure: Module A — internal control (Annex VIII, Part I)
+  declaration_of_conformity: ""
+  notified_body: ""
+  harmonised_approach: ""
