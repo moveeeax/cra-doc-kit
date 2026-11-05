@@ -38,7 +38,7 @@ Or from a clone:
 make build   # ./bin/cra-doc-kit
 ```
 
-Go 1.24 or newer. The only dependency is `gopkg.in/yaml.v3`.
+Go 1.26 or newer. The only dependency is `go.yaml.in/yaml/v3`.
 
 ## Usage example
 
@@ -180,3 +180,7 @@ The CRA requirement wording used in the reports and in the Annex VII skeleton is
 a working paraphrase for navigation. The text of Regulation (EU) 2024/2847
 governs, and the manufacturer remains responsible for the technical file, the
 conformity assessment and the declaration of conformity.
+
+## License
+
+[MIT](LICENSE)
