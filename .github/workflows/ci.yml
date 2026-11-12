@@ -52,19 +52,23 @@ jobs:
             --scan examples/scan.grype.json \
             --triage examples/triage.yaml \
             --profile examples/product.yaml \
+            --kev examples/kev.json \
             --out out/vex.json
           ./bin/cra-doc-kit annex \
             --sbom examples/sbom.cdx.json \
             --profile examples/product.yaml \
             --scan examples/scan.grype.json \
             --vex out/vex.json \
+            --kev examples/kev.json \
             --out out/annex-vii.md
-          # The example SBOM ships a deliberate gap, so gapcheck is expected to
-          # exit 1 here. That it does is part of what is being tested.
+          # The example SBOM ships a deliberate gap and a KEV-listed finding is
+          # still under investigation, so gapcheck is expected to exit 1 here.
+          # That it does is part of what is being tested.
           ./bin/cra-doc-kit gapcheck \
             --sbom examples/sbom.cdx.json \
             --scan examples/scan.grype.json \
             --vex out/vex.json \
+            --kev examples/kev.json \
             --out out/gap-check.md && rc=0 || rc=$?
           if [ "$rc" -ne 1 ]; then
             echo "gapcheck exited $rc, expected 1 for the example inputs"

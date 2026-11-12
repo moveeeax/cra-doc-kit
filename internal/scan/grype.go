@@ -24,6 +24,7 @@ type Finding struct {
 	FixVersions []string // versions that resolve the finding
 	DataSource  string   // advisory URL
 	Description string
+	Aliases     []string // related IDs Grype reports for the same issue, e.g. the CVE behind a GHSA
 }
 
 // Fixed reports whether an upgrade is available for this finding. A fixed
@@ -45,6 +46,9 @@ type grypeDoc struct {
 				State    string   `json:"state"`
 			} `json:"fix"`
 		} `json:"vulnerability"`
+		RelatedVulnerabilities []struct {
+			ID string `json:"id"`
+		} `json:"relatedVulnerabilities"`
 		Artifact struct {
 			Name    string `json:"name"`
 			Version string `json:"version"`
@@ -111,6 +115,11 @@ func Parse(data []byte) (*Result, error) {
 		}
 		if f.ID == "" {
 			continue
+		}
+		for _, r := range m.RelatedVulnerabilities {
+			if r.ID != "" && r.ID != f.ID {
+				f.Aliases = append(f.Aliases, r.ID)
+			}
 		}
 		key := f.ID + "|" + f.PURL
 		if seen[key] {

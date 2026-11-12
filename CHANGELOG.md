@@ -16,6 +16,14 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- `--kev` on `gapcheck`, `vex` and `annex`: read a local copy of the CISA Known
+  Exploited Vulnerabilities catalog. `gapcheck` adds rule VULN-004, a blocker
+  for KEV-listed findings left `affected`, `under_investigation` or untriaged
+  (Annex I Part II(2), Article 14); `vex` writes a KEV marker into
+  `status_notes` of open statements; `annex` lists KEV-listed findings with
+  their `dateAdded` in section 2.4.
+- Grype `relatedVulnerabilities` are kept as aliases of a finding, so a GHSA
+  match resolves to the CVE in the KEV catalog.
 - MIT license.
 - Dependabot configuration for GitHub Actions and Go modules.
 

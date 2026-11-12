@@ -111,3 +111,18 @@ func TestSeverityRankUnknownSortsLast(t *testing.T) {
 		t.Error("an unrecognised severity must rank last")
 	}
 }
+
+func TestParseKeepsRelatedVulnerabilitiesAsAliases(t *testing.T) {
+	res, err := Parse([]byte(`{"matches": [
+	  {"vulnerability": {"id": "GHSA-0000-0000-0001", "severity": "critical"},
+	   "relatedVulnerabilities": [{"id": "CVE-2021-44228"}, {"id": "GHSA-0000-0000-0001"}],
+	   "artifact": {"name": "log4j-core", "version": "2.14.1", "purl": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1"}}
+	]}`))
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	got := res.Findings[0].Aliases
+	if len(got) != 1 || got[0] != "CVE-2021-44228" {
+		t.Errorf("aliases = %v, want [CVE-2021-44228] without the finding's own ID", got)
+	}
+}

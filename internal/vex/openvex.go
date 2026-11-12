@@ -12,8 +12,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
+	"github.com/moveeeax/cra-doc-kit/internal/kev"
 	"github.com/moveeeax/cra-doc-kit/internal/scan"
 )
 
@@ -62,6 +64,7 @@ type Statement struct {
 	Timestamp       string        `json:"timestamp,omitempty"`
 	Products        []Product     `json:"products"`
 	Status          Status        `json:"status"`
+	StatusNotes     string        `json:"status_notes,omitempty"`
 	Justification   string        `json:"justification,omitempty"`
 	ImpactStatement string        `json:"impact_statement,omitempty"`
 	ActionStatement string        `json:"action_statement,omitempty"`
@@ -92,6 +95,17 @@ type Options struct {
 	Role      string    // e.g. "Manufacturer"
 	Tooling   string    // tool identifier written into the document
 	Timestamp time.Time // document timestamp; zero means time.Now().UTC()
+	// KEV, when set, marks affected and under_investigation statements whose
+	// vulnerability is in the CISA Known Exploited Vulnerabilities catalog.
+	KEV *kev.Catalog
+}
+
+// kevNote is the status note written on an open statement about a
+// vulnerability CISA lists as exploited in the wild.
+func kevNote(e kev.Entry, catalog string) string {
+	return fmt.Sprintf("KEV: listed in the CISA Known Exploited Vulnerabilities catalog since %s (catalog %s). "+
+		"An actively exploited vulnerability contained in the product is reportable under Article 14 of Regulation (EU) 2024/2847.",
+		e.DateAdded, catalog)
 }
 
 // Generate builds an OpenVEX document from scan findings and a triage file.
@@ -124,6 +138,7 @@ func Generate(findings []scan.Finding, triage *Triage, opts Options) (*Document,
 		impact string
 		action string
 		descr  string
+		notes  string
 	}
 	groups := map[groupKey]map[string]bool{}
 	used := make([]bool, len(triage.Statements))
@@ -139,6 +154,11 @@ func Generate(findings []scan.Finding, triage *Triage, opts Options) (*Document,
 				impact: entry.Impact,
 				action: entry.Action,
 				descr:  f.Description,
+			}
+		}
+		if key.status == StatusAffected || key.status == StatusUnderInvestigation {
+			if e, ok := opts.KEV.Lookup(f); ok {
+				key.notes = kevNote(e, opts.KEV.Version)
 			}
 		}
 		sub := f.PURL
@@ -188,6 +208,7 @@ func Generate(findings []scan.Finding, triage *Triage, opts Options) (*Document,
 			Timestamp:       stamp,
 			Products:        []Product{{ID: opts.ProductID, Subcomponents: subs}},
 			Status:          k.status,
+			StatusNotes:     k.notes,
 			Justification:   k.just,
 			ImpactStatement: k.impact,
 			ActionStatement: k.action,
@@ -241,6 +262,17 @@ func (d *Document) CountByStatus() map[Status]int {
 		out[s.Status]++
 	}
 	return out
+}
+
+// KEVListed counts the statements that carry the KEV status note.
+func (d *Document) KEVListed() int {
+	n := 0
+	for _, s := range d.Statements {
+		if strings.HasPrefix(s.StatusNotes, "KEV:") {
+			n++
+		}
+	}
+	return n
 }
 
 // StatusOf returns the status asserted for a vulnerability ID, if any.

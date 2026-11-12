@@ -27,7 +27,8 @@ func (r *Report) Markdown() string {
 	fmt.Fprintf(&b, "| Input | File |\n|---|---|\n")
 	fmt.Fprintf(&b, "| SBOM | `%s` |\n", orDash(r.SBOM))
 	fmt.Fprintf(&b, "| Vulnerability scan | `%s` |\n", orDash(r.Scan))
-	fmt.Fprintf(&b, "| VEX | `%s` |\n\n", orDash(r.VEX))
+	fmt.Fprintf(&b, "| VEX | `%s` |\n", orDash(r.VEX))
+	fmt.Fprintf(&b, "| CISA KEV catalog | `%s` |\n\n", orDash(r.KEV))
 
 	fmt.Fprintf(&b, "**Result: %d blocker(s), %d warning(s), %d note(s), %d passed check(s) across %d components.**\n\n",
 		r.Counts.Blocker, r.Counts.Warning, r.Counts.Info, r.Counts.Pass, r.Components)

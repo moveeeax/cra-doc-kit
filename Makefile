@@ -25,11 +25,13 @@ examples: build ## Regenerate the example deliverables under out/
 		--scan examples/scan.grype.json \
 		--triage examples/triage.yaml \
 		--profile examples/product.yaml \
+		--kev examples/kev.json \
 		--out out/vex.json
 	./bin/$(BINARY) gapcheck \
 		--sbom examples/sbom.cdx.json \
 		--scan examples/scan.grype.json \
 		--vex out/vex.json \
+		--kev examples/kev.json \
 		--fail-on none \
 		--out out/gap-check.md
 	./bin/$(BINARY) annex \
@@ -37,6 +39,7 @@ examples: build ## Regenerate the example deliverables under out/
 		--profile examples/product.yaml \
 		--scan examples/scan.grype.json \
 		--vex out/vex.json \
+		--kev examples/kev.json \
 		--out out/annex-vii.md
 
 clean: ## Remove build output

@@ -131,6 +131,21 @@ VEX assessment: `{{ .VEXPath }}`
 {{- else }}
 **TODO — no VEX document supplied. Run `cra-doc-kit vex` and attach the result.**
 {{- end }}
+{{- if .KEVChecked }}
+
+**Known exploited vulnerabilities** — CISA KEV catalog {{ .KEVVersion }}{{ if .KEVPath }} (`{{ .KEVPath }}`){{ end }}
+{{ if .KEVRows }}
+| Vulnerability | Component | Severity | VEX status | KEV dateAdded |
+|---|---|---|---|---|
+{{- range .KEVRows }}
+| {{ .ID }} | `{{ .Component }}` | {{ .Severity }} | {{ .VEXStatus }} | {{ .DateAdded }} |
+{{- end }}
+
+A KEV listing means the vulnerability is exploited in the wild. Where the product is affected, Article 14 reporting applies (section 2.2).
+{{- else }}
+No finding of the scan is listed in the catalog.
+{{- end }}
+{{- end }}
 {{- else }}
 **TODO — no vulnerability scan supplied. Run a scanner over the SBOM and attach the report.**
 {{- end }}
