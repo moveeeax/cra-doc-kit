@@ -16,6 +16,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/moveeeax/cra-doc-kit/internal/kev"
 	"github.com/moveeeax/cra-doc-kit/internal/profile"
 	"github.com/moveeeax/cra-doc-kit/internal/sbom"
 	"github.com/moveeeax/cra-doc-kit/internal/scan"
@@ -35,6 +36,8 @@ type Input struct {
 	ScanPath string
 	VEX      *vex.Document
 	VEXPath  string
+	KEV      *kev.Catalog // optional offline copy of the CISA KEV catalog
+	KEVPath  string
 	Now      time.Time
 }
 
@@ -61,6 +64,11 @@ type View struct {
 	Severities   []SeverityCount
 	VEXStatuses  []StatusCount
 	OpenFindings int
+
+	KEVChecked bool
+	KEVVersion string
+	KEVPath    string
+	KEVRows    []KEVRow
 
 	Standards []string
 	Tests     []profile.Test
@@ -90,6 +98,15 @@ type SeverityCount struct {
 type StatusCount struct {
 	Status string
 	Count  int
+}
+
+// KEVRow is one scan finding that the CISA KEV catalog lists.
+type KEVRow struct {
+	ID        string
+	Component string
+	Severity  string
+	VEXStatus string
+	DateAdded string
 }
 
 // Requirement is one essential requirement row of the applicability table.
@@ -182,6 +199,12 @@ func buildView(in Input, now time.Time) *View {
 		}
 		v.OpenFindings = counts[vex.StatusAffected] + counts[vex.StatusUnderInvestigation]
 	}
+	if in.Scan != nil && in.KEV != nil {
+		v.KEVChecked = true
+		v.KEVVersion = in.KEV.Version
+		v.KEVPath = in.KEVPath
+		v.KEVRows = kevRows(in)
+	}
 
 	v.fields = map[string]string{
 		"product.intended_purpose":             p.Product.IntendedPurpose,
@@ -228,6 +251,34 @@ func collectTODOs(v *View) []string {
 	}
 	sort.Strings(todos)
 	return todos
+}
+
+func kevRows(in Input) []KEVRow {
+	var rows []KEVRow
+	for _, f := range in.Scan.Findings {
+		e, ok := in.KEV.Lookup(f)
+		if !ok {
+			continue
+		}
+		status := "—"
+		if in.VEX != nil {
+			if st, has := in.VEX.StatusOf(f.ID); has {
+				status = "`" + string(st) + "`"
+			}
+		}
+		component := f.PURL
+		if component == "" {
+			component = f.Name + "@" + f.Version
+		}
+		rows = append(rows, KEVRow{
+			ID:        f.ID,
+			Component: component,
+			Severity:  f.Severity,
+			VEXStatus: status,
+			DateAdded: e.DateAdded,
+		})
+	}
+	return rows
 }
 
 func licenceCounts(components []sbom.Component) []LicenceCount {

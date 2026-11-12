@@ -12,6 +12,7 @@ import (
 
 	"github.com/moveeeax/cra-doc-kit/internal/annex"
 	"github.com/moveeeax/cra-doc-kit/internal/gapcheck"
+	"github.com/moveeeax/cra-doc-kit/internal/kev"
 	"github.com/moveeeax/cra-doc-kit/internal/profile"
 	"github.com/moveeeax/cra-doc-kit/internal/sbom"
 	"github.com/moveeeax/cra-doc-kit/internal/scan"
@@ -111,6 +112,7 @@ func runGapcheck(args []string, stdout, stderr io.Writer) error {
 		sbomPath = fs.String("sbom", "", "CycloneDX SBOM (required)")
 		scanPath = fs.String("scan", "", "Grype JSON report")
 		vexPath  = fs.String("vex", "", "OpenVEX document")
+		kevPath  = fs.String("kev", "", "local copy of the CISA KEV catalog (known_exploited_vulnerabilities.json)")
 		format   = fs.String("format", "md", "output format: md or json")
 		out      = fs.String("out", "-", "output file, or - for stdout")
 		failOn   = fs.String("fail-on", "blocker", "exit 1 when a finding of this severity or worse exists: blocker, warning, info, none")
@@ -136,7 +138,7 @@ func runGapcheck(args []string, stdout, stderr io.Writer) error {
 		return err
 	}
 
-	in := gapcheck.Input{SBOMPath: *sbomPath, ScanPath: *scanPath, VEXPath: *vexPath, Now: now}
+	in := gapcheck.Input{SBOMPath: *sbomPath, ScanPath: *scanPath, VEXPath: *vexPath, KEVPath: *kevPath, Now: now}
 	if in.SBOM, err = sbom.Load(*sbomPath); err != nil {
 		return err
 	}
@@ -147,6 +149,11 @@ func runGapcheck(args []string, stdout, stderr io.Writer) error {
 	}
 	if *vexPath != "" {
 		if in.VEX, err = loadVEX(*vexPath); err != nil {
+			return err
+		}
+	}
+	if *kevPath != "" {
+		if in.KEV, err = kev.Load(*kevPath); err != nil {
 			return err
 		}
 	}
@@ -201,6 +208,7 @@ func runVex(args []string, stdout, stderr io.Writer) error {
 		triagePath  = fs.String("triage", "", "triage YAML with the analyst decisions")
 		profilePath = fs.String("profile", "", "product profile YAML, used for the product identifier and author")
 		sbomPath    = fs.String("sbom", "", "CycloneDX SBOM, used as a fallback source of the product identifier")
+		kevPath     = fs.String("kev", "", "local copy of the CISA KEV catalog; marks affected and under_investigation statements it lists")
 		product     = fs.String("product", "", "product identifier (purl) the statements apply to")
 		author      = fs.String("author", "", "author of the statements")
 		role        = fs.String("role", "Manufacturer", "role of the author")
@@ -235,12 +243,20 @@ func runVex(args []string, stdout, stderr io.Writer) error {
 		}
 	}
 
+	var catalog *kev.Catalog
+	if *kevPath != "" {
+		if catalog, err = kev.Load(*kevPath); err != nil {
+			return err
+		}
+	}
+
 	opts := vex.Options{
 		ProductID: *product,
 		Author:    *author,
 		Role:      *role,
 		Tooling:   "cra-doc-kit " + Version,
 		Timestamp: now,
+		KEV:       catalog,
 	}
 	if *profilePath != "" {
 		p, err := profile.Load(*profilePath)
@@ -291,8 +307,12 @@ func runVex(args []string, stdout, stderr io.Writer) error {
 	}
 	if *out != "-" {
 		counts := doc.CountByStatus()
-		fmt.Fprintf(stderr, "wrote %s (%d statements, %d under_investigation)\n",
-			*out, len(doc.Statements), counts[vex.StatusUnderInvestigation])
+		kevNote := ""
+		if catalog != nil {
+			kevNote = fmt.Sprintf(", %d KEV-listed", doc.KEVListed())
+		}
+		fmt.Fprintf(stderr, "wrote %s (%d statements, %d under_investigation%s)\n",
+			*out, len(doc.Statements), counts[vex.StatusUnderInvestigation], kevNote)
 	}
 	return nil
 }
@@ -307,6 +327,7 @@ func runAnnex(args []string, stdout, stderr io.Writer) error {
 		profilePath = fs.String("profile", "", "product profile YAML (required)")
 		scanPath    = fs.String("scan", "", "Grype JSON report")
 		vexPath     = fs.String("vex", "", "OpenVEX document")
+		kevPath     = fs.String("kev", "", "local copy of the CISA KEV catalog (known_exploited_vulnerabilities.json)")
 		out         = fs.String("out", "-", "output file, or - for stdout")
 		strict      = fs.Bool("strict", false, "exit 1 if any TODO remains in the rendered file")
 		stamp       = fs.String("timestamp", "", "RFC 3339 document timestamp (default: now)")
@@ -327,7 +348,7 @@ func runAnnex(args []string, stdout, stderr io.Writer) error {
 		return err
 	}
 
-	in := annex.Input{SBOMPath: *sbomPath, ScanPath: *scanPath, VEXPath: *vexPath, Now: now}
+	in := annex.Input{SBOMPath: *sbomPath, ScanPath: *scanPath, VEXPath: *vexPath, KEVPath: *kevPath, Now: now}
 	if in.Profile, err = profile.Load(*profilePath); err != nil {
 		return err
 	}
@@ -341,6 +362,11 @@ func runAnnex(args []string, stdout, stderr io.Writer) error {
 	}
 	if *vexPath != "" {
 		if in.VEX, err = loadVEX(*vexPath); err != nil {
+			return err
+		}
+	}
+	if *kevPath != "" {
+		if in.KEV, err = kev.Load(*kevPath); err != nil {
 			return err
 		}
 	}

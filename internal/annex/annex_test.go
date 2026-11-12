@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moveeeax/cra-doc-kit/internal/kev"
 	"github.com/moveeeax/cra-doc-kit/internal/profile"
 	"github.com/moveeeax/cra-doc-kit/internal/sbom"
 	"github.com/moveeeax/cra-doc-kit/internal/scan"
@@ -225,5 +226,48 @@ func TestCategoryLabels(t *testing.T) {
 		if got := p.CategoryLabel(); got != want {
 			t.Errorf("CategoryLabel(%q) = %q, want %q", in, got, want)
 		}
+	}
+}
+
+func TestKEVTableListsCatalogMatches(t *testing.T) {
+	in := example(t)
+	c, err := kev.Load(ex("kev.json"))
+	if err != nil {
+		t.Fatalf("load kev: %v", err)
+	}
+	in.KEV, in.KEVPath = c, "examples/kev.json"
+	out, view := render(t, in)
+
+	if len(view.KEVRows) != 2 {
+		t.Fatalf("KEV rows = %d, want 2 (CVE-2021-44228 and CVE-2023-44487)", len(view.KEVRows))
+	}
+	for _, want := range []string{
+		"CISA KEV catalog 2026.11.10 (`examples/kev.json`)",
+		"| CVE-2021-44228 | `pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1` | Critical | `not_affected` | 2021-12-10 |",
+		"| CVE-2023-44487 | `pkg:golang/golang.org/x/net@v0.15.0` | High | `under_investigation` | 2023-10-10 |",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("rendered file is missing %q", want)
+		}
+	}
+}
+
+func TestKEVTableWithoutMatches(t *testing.T) {
+	in := example(t)
+	c, err := kev.Parse([]byte(`{"catalogVersion": "2026.01.01", "vulnerabilities": []}`))
+	if err != nil {
+		t.Fatalf("parse kev: %v", err)
+	}
+	in.KEV = c
+	out, _ := render(t, in)
+	if !strings.Contains(out, "No finding of the scan is listed in the catalog.") {
+		t.Error("an empty KEV match is not stated")
+	}
+}
+
+func TestNoKEVSectionWithoutCatalog(t *testing.T) {
+	out, _ := render(t, example(t))
+	if strings.Contains(out, "Known exploited vulnerabilities") {
+		t.Error("a KEV section was rendered without a catalog")
 	}
 }

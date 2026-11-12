@@ -85,6 +85,7 @@ func TestVexMatchesCommittedExample(t *testing.T) {
 		"--scan", "examples/scan.grype.json",
 		"--triage", "examples/triage.yaml",
 		"--profile", "examples/product.yaml",
+		"--kev", "examples/kev.json",
 		"--timestamp", stamp,
 	)
 	if code != 0 {
@@ -115,6 +116,7 @@ func TestGapcheckMarkdown(t *testing.T) {
 		"--sbom", "examples/sbom.cdx.json",
 		"--scan", "examples/scan.grype.json",
 		"--vex", "examples/vex.json",
+		"--kev", "examples/kev.json",
 		"--timestamp", stamp,
 		"--fail-on", "none",
 	)
@@ -130,6 +132,7 @@ func TestGapcheckJSON(t *testing.T) {
 		"--sbom", "examples/sbom.cdx.json",
 		"--scan", "examples/scan.grype.json",
 		"--vex", "examples/vex.json",
+		"--kev", "examples/kev.json",
 		"--format", "json",
 		"--timestamp", stamp,
 		"--fail-on", "none",
@@ -147,6 +150,7 @@ func TestAnnex(t *testing.T) {
 		"--profile", "examples/product.yaml",
 		"--scan", "examples/scan.grype.json",
 		"--vex", "examples/vex.json",
+		"--kev", "examples/kev.json",
 		"--timestamp", stamp,
 	)
 	if code != 0 {
@@ -161,6 +165,7 @@ func TestGapcheckFailsOnBlockersByDefault(t *testing.T) {
 		"--sbom", "examples/sbom.cdx.json",
 		"--scan", "examples/scan.grype.json",
 		"--vex", "examples/vex.json",
+		"--kev", "examples/kev.json",
 		"--timestamp", stamp,
 	)
 	if code != 1 {
@@ -274,6 +279,43 @@ func TestVexTakesTheProductIdentifierFromTheSBOM(t *testing.T) {
 	}
 }
 
+func TestVexReportsKEVListedStatements(t *testing.T) {
+	out := filepath.Join(t.TempDir(), "vex.json")
+	code, _, stderr := run(t,
+		"vex",
+		"--scan", "examples/scan.grype.json",
+		"--triage", "examples/triage.yaml",
+		"--profile", "examples/product.yaml",
+		"--kev", "examples/kev.json",
+		"--timestamp", stamp,
+		"--out", out,
+	)
+	if code != 0 {
+		t.Fatalf("exit = %d, stderr: %s", code, stderr)
+	}
+	if !strings.Contains(stderr, "(5 statements, 1 under_investigation, 1 KEV-listed)") {
+		t.Errorf("stderr = %q, want the KEV-listed count", stderr)
+	}
+}
+
+func TestGapcheckKEVBlocker(t *testing.T) {
+	code, stdout, _ := run(t,
+		"gapcheck",
+		"--sbom", "examples/sbom.cdx.json",
+		"--scan", "examples/scan.grype.json",
+		"--vex", "examples/vex.json",
+		"--kev", "examples/kev.json",
+		"--timestamp", stamp,
+		"--fail-on", "none",
+	)
+	if code != 0 {
+		t.Fatalf("exit = %d", code)
+	}
+	if !strings.Contains(stdout, "| VULN-004 No KEV-listed vulnerability is affected or under investigation | BLOCKER | Annex I Part II(2), Article 14 |") {
+		t.Error("the summary does not carry the VULN-004 blocker")
+	}
+}
+
 func TestUsageErrors(t *testing.T) {
 	cases := []struct {
 		name string
@@ -287,6 +329,8 @@ func TestUsageErrors(t *testing.T) {
 		{"unreadable sbom", []string{"gapcheck", "--sbom", "does/not/exist.json"}},
 		{"bad format", []string{"gapcheck", "--sbom", "examples/sbom.cdx.json", "--format", "pdf"}},
 		{"bad fail-on", []string{"gapcheck", "--sbom", "examples/sbom.cdx.json", "--fail-on", "yes"}},
+		{"unreadable kev", []string{"gapcheck", "--sbom", "examples/sbom.cdx.json", "--kev", "does/not/exist.json"}},
+		{"kev that is not a catalog", []string{"vex", "--scan", "examples/scan.grype.json", "--profile", "examples/product.yaml", "--kev", "examples/scan.grype.json"}},
 		{"bad timestamp", []string{"gapcheck", "--sbom", "examples/sbom.cdx.json", "--timestamp", "yesterday"}},
 	}
 	for _, tc := range cases {

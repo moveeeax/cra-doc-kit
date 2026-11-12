@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moveeeax/cra-doc-kit/internal/kev"
 	"github.com/moveeeax/cra-doc-kit/internal/sbom"
 	"github.com/moveeeax/cra-doc-kit/internal/scan"
 	"github.com/moveeeax/cra-doc-kit/internal/vex"
@@ -257,5 +258,100 @@ func TestEvidenceIsTruncated(t *testing.T) {
 	}
 	if !strings.Contains(f.Evidence[3], "17 more") {
 		t.Errorf("overflow line = %q, want it to count the remaining 17", f.Evidence[3])
+	}
+}
+
+func withKEV(t *testing.T, in Input) Input {
+	t.Helper()
+	c, err := kev.Load(filepath.Join("..", "..", "examples", "kev.json"))
+	if err != nil {
+		t.Fatalf("load kev: %v", err)
+	}
+	in.KEV, in.KEVPath = c, "examples/kev.json"
+	return in
+}
+
+func TestKEVRuleSkippedWithoutCatalog(t *testing.T) {
+	if _, ok := findingsByRule(Run(example(t)))["VULN-004"]; ok {
+		t.Error("VULN-004 ran without a KEV catalog")
+	}
+}
+
+func TestKEVListedFindingUnderInvestigationIsABlocker(t *testing.T) {
+	rep := Run(withKEV(t, example(t)))
+	f := findingsByRule(rep)["VULN-004"]
+	if f.Severity != Blocker {
+		t.Fatalf("VULN-004 = %s, want blocker: CVE-2023-44487 is KEV-listed and under_investigation", f.Severity)
+	}
+	if !strings.Contains(f.Reference, "Article 14") {
+		t.Errorf("VULN-004 reference = %q, want Article 14 cited", f.Reference)
+	}
+	// CVE-2021-44228 is KEV-listed too, but triaged not_affected.
+	if len(f.Evidence) != 1 || !strings.Contains(f.Evidence[0], "CVE-2023-44487") ||
+		!strings.Contains(f.Evidence[0], "KEV since 2023-10-10, under_investigation") {
+		t.Errorf("VULN-004 evidence = %v, want only CVE-2023-44487 with its KEV date and status", f.Evidence)
+	}
+	if !strings.Contains(f.Detail, "1 of 2 findings listed in the CISA KEV catalog 2026.11.10 is not closed") {
+		t.Errorf("VULN-004 detail = %q", f.Detail)
+	}
+	if rep.KEV != "examples/kev.json" {
+		t.Errorf("report KEV path = %q", rep.KEV)
+	}
+}
+
+func TestKEVListedFindingAffectedIsABlocker(t *testing.T) {
+	in := withKEV(t, example(t))
+	for i, st := range in.VEX.Statements {
+		if st.Vulnerability.Name == "CVE-2021-44228" {
+			in.VEX.Statements[i].Status = vex.StatusAffected
+		}
+		if st.Vulnerability.Name == "CVE-2023-44487" {
+			in.VEX.Statements[i].Status = vex.StatusFixed
+		}
+	}
+	f := findingsByRule(Run(in))["VULN-004"]
+	if f.Severity != Blocker || len(f.Evidence) != 1 || !strings.Contains(f.Evidence[0], "CVE-2021-44228") {
+		t.Errorf("VULN-004 = %+v, want a blocker naming the affected CVE-2021-44228", f)
+	}
+}
+
+func TestKEVListedFindingWithoutVEXIsABlocker(t *testing.T) {
+	in := withKEV(t, example(t))
+	in.VEX, in.VEXPath = nil, ""
+	f := findingsByRule(Run(in))["VULN-004"]
+	if f.Severity != Blocker || len(f.Evidence) != 2 {
+		t.Fatalf("VULN-004 = %+v, want a blocker naming both KEV-listed findings", f)
+	}
+	if !strings.Contains(f.Evidence[0], "no VEX statement") {
+		t.Errorf("evidence = %v, want the missing decision named", f.Evidence)
+	}
+}
+
+func TestKEVRulePassesWhenEveryListedFindingIsClosed(t *testing.T) {
+	in := withKEV(t, example(t))
+	for i, st := range in.VEX.Statements {
+		if st.Vulnerability.Name == "CVE-2023-44487" {
+			in.VEX.Statements[i].Status = vex.StatusNotAffected
+		}
+	}
+	f := findingsByRule(Run(in))["VULN-004"]
+	if f.Severity != Pass {
+		t.Fatalf("VULN-004 = %s, want pass", f.Severity)
+	}
+	if !strings.Contains(f.Detail, "2 findings are listed") {
+		t.Errorf("VULN-004 detail = %q", f.Detail)
+	}
+}
+
+func TestKEVRulePassesWhenNothingIsListed(t *testing.T) {
+	in := example(t)
+	c, err := kev.Parse([]byte(`{"catalogVersion": "2026.01.01", "vulnerabilities": []}`))
+	if err != nil {
+		t.Fatalf("parse kev: %v", err)
+	}
+	in.KEV = c
+	f := findingsByRule(Run(in))["VULN-004"]
+	if f.Severity != Pass || !strings.Contains(f.Detail, "None of the 5 findings") {
+		t.Errorf("VULN-004 = %+v, want a pass naming the finding count", f)
 	}
 }

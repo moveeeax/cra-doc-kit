@@ -1,6 +1,6 @@
 {
   "@context": "https://openvex.dev/ns/v0.2.0",
-  "@id": "https://openvex.dev/docs/public/vex-d9b555e8545b06fdcc5fd3545cd3564fabe7053296bbe74ac7c7b4aa7e833144",
+  "@id": "https://openvex.dev/docs/public/vex-0a77ab502d8bfb76dae0f4af6bf6fdf0e09b0f1540558fa298f81ca8338cbba2",
   "author": "Acme Software GmbH",
   "role": "Manufacturer",
   "timestamp": "2026-07-20T10:00:00Z",
@@ -83,7 +83,8 @@
           ]
         }
       ],
-      "status": "under_investigation"
+      "status": "under_investigation",
+      "status_notes": "KEV: listed in the CISA Known Exploited Vulnerabilities catalog since 2023-10-10 (catalog 2026.11.10). An actively exploited vulnerability contained in the product is reportable under Article 14 of Regulation (EU) 2024/2847."
     },
     {
       "vulnerability": {

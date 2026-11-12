@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/moveeeax/cra-doc-kit/internal/kev"
 	"github.com/moveeeax/cra-doc-kit/internal/sbom"
 	"github.com/moveeeax/cra-doc-kit/internal/scan"
 	"github.com/moveeeax/cra-doc-kit/internal/textfmt"
@@ -47,6 +48,7 @@ type Report struct {
 	SBOM       string    `json:"sbom"`
 	Scan       string    `json:"scan,omitempty"`
 	VEX        string    `json:"vex,omitempty"`
+	KEV        string    `json:"kev,omitempty"`
 	Generated  string    `json:"generated"`
 	Findings   []Finding `json:"findings"`
 	Counts     Counts    `json:"counts"`
@@ -69,7 +71,11 @@ type Input struct {
 	ScanPath string
 	VEX      *vex.Document
 	VEXPath  string
-	Now      time.Time
+	// KEV is an offline copy of the CISA Known Exploited Vulnerabilities
+	// catalog. Nil skips VULN-004.
+	KEV     *kev.Catalog
+	KEVPath string
+	Now     time.Time
 	// MaxEvidence caps how many offending components are listed per rule.
 	MaxEvidence int
 }
@@ -90,6 +96,7 @@ func Run(in Input) *Report {
 		SBOM:      in.SBOMPath,
 		Scan:      in.ScanPath,
 		VEX:       in.VEXPath,
+		KEV:       in.KEVPath,
 		Generated: now.UTC().Format(time.RFC3339),
 	}
 	if p := in.SBOM.Product(); p != nil {
@@ -548,7 +555,62 @@ func vulnRules(in Input) []Finding {
 			})
 		}
 	}
+	if in.KEV != nil {
+		out = append(out, ruleKEV(in))
+	}
 	return out
+}
+
+// ruleKEV flags findings that CISA lists as exploited in the wild and that the
+// VEX does not close as not_affected or fixed. Such a finding is the case
+// Article 14 reporting is written for, so it blocks regardless of how the
+// rest of the triage looks.
+func ruleKEV(in Input) Finding {
+	f := Finding{
+		Rule:      "VULN-004",
+		Title:     "No KEV-listed vulnerability is affected or under investigation",
+		Reference: "Annex I Part II(2), Article 14",
+	}
+	var listed int
+	var open []string
+	for _, fnd := range in.Scan.Findings {
+		e, ok := in.KEV.Lookup(fnd)
+		if !ok {
+			continue
+		}
+		listed++
+		status, has := vex.Status(""), false
+		if in.VEX != nil {
+			status, has = in.VEX.StatusOf(fnd.ID)
+		}
+		if has && status != vex.StatusAffected && status != vex.StatusUnderInvestigation {
+			continue
+		}
+		state := "no VEX statement"
+		if has {
+			state = string(status)
+		}
+		open = append(open, fmt.Sprintf("%s (%s) %s — KEV since %s, %s", fnd.ID, fnd.Severity, fnd.Name, e.DateAdded, state))
+	}
+	catalog := fmt.Sprintf("CISA KEV catalog %s", in.KEV.Version)
+	switch {
+	case listed == 0:
+		f.Severity = Pass
+		f.Detail = fmt.Sprintf("None of the %s is listed in the %s.",
+			textfmt.Count(len(in.Scan.Findings), "finding", "findings"), catalog)
+	case len(open) == 0:
+		f.Severity = Pass
+		f.Detail = fmt.Sprintf("%s listed in the %s; every one is triaged as not_affected or fixed.",
+			textfmt.Count(listed, "finding is", "findings are"), catalog)
+	default:
+		f.Severity = Blocker
+		f.Detail = fmt.Sprintf("%d of %s listed in the %s %s not closed as not_affected or fixed. "+
+			"If an exploited vulnerability is contained in the product, Article 14 requires an early warning "+
+			"to the coordinating CSIRT and ENISA within 24 hours of becoming aware of it.",
+			len(open), textfmt.Count(listed, "finding", "findings"), catalog, textfmt.Is(len(open)))
+		f.Evidence = truncate(open, in.MaxEvidence)
+	}
+	return f
 }
 
 func truncate(items []string, max int) []string {

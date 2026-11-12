@@ -7,14 +7,16 @@ Generated: 2026-07-20T10:00:00Z by cra-doc-kit
 | SBOM | `examples/sbom.cdx.json` |
 | Vulnerability scan | `examples/scan.grype.json` |
 | VEX | `examples/vex.json` |
+| CISA KEV catalog | `examples/kev.json` |
 
-**Result: 1 blocker(s), 3 warning(s), 2 note(s), 9 passed check(s) across 9 components.**
+**Result: 2 blocker(s), 3 warning(s), 2 note(s), 9 passed check(s) across 9 components.**
 
 ## Summary
 
 | Check | Result | CRA reference |
 |---|---|---|
 | SBOM-007 Every component carries a package URL | BLOCKER | Annex I Part II(1) |
+| VULN-004 No KEV-listed vulnerability is affected or under investigation | BLOCKER | Annex I Part II(2), Article 14 |
 | SBOM-008 Components identify their supplier | WARNING | Annex VII(2)(b) |
 | SBOM-009 Components declare licence information | WARNING | Annex VII(2)(b) |
 | VULN-003 No vulnerability is left under investigation at release | WARNING | Annex I Part II(2) |
@@ -39,6 +41,14 @@ Generated: 2026-07-20T10:00:00Z by cra-doc-kit
 1 of 9 components has no purl; VEX statements cannot reference them unambiguously.
 
 - `acme-crypto-helpers@1.2.0`
+
+### VULN-004 — No KEV-listed vulnerability is affected or under investigation
+
+*Reference: Annex I Part II(2), Article 14*
+
+1 of 2 findings listed in the CISA KEV catalog 2026.11.10 is not closed as not_affected or fixed. If an exploited vulnerability is contained in the product, Article 14 requires an early warning to the coordinating CSIRT and ENISA within 24 hours of becoming aware of it.
+
+- `CVE-2023-44487 (High) golang.org/x/net — KEV since 2023-10-10, under_investigation`
 
 ## Warnings
 

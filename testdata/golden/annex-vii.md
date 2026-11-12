@@ -132,6 +132,15 @@ VEX assessment: `examples/vex.json`
 
 **2 statements are `affected` or `under_investigation`. Each must be closed or justified before this file is signed.**
 
+**Known exploited vulnerabilities** — CISA KEV catalog 2026.11.10 (`examples/kev.json`)
+
+| Vulnerability | Component | Severity | VEX status | KEV dateAdded |
+|---|---|---|---|---|
+| CVE-2021-44228 | `pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1` | Critical | `not_affected` | 2021-12-10 |
+| CVE-2023-44487 | `pkg:golang/golang.org/x/net@v0.15.0` | High | `under_investigation` | 2023-10-10 |
+
+A KEV listing means the vulnerability is exploited in the wild. Where the product is affected, Article 14 reporting applies (section 2.2).
+
 ---
 
 ## 3. Cybersecurity risk assessment — Annex VII(3), Article 13(2)

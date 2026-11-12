@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/moveeeax/cra-doc-kit/internal/kev"
 	"github.com/moveeeax/cra-doc-kit/internal/scan"
 )
 
@@ -262,5 +263,93 @@ func TestParseRoundTrip(t *testing.T) {
 	}
 	if len(back.Statements) != len(doc.Statements) || back.ID != doc.ID {
 		t.Error("round trip through JSON lost content")
+	}
+}
+
+func exampleKEV(t *testing.T) *kev.Catalog {
+	t.Helper()
+	c, err := kev.Load(filepath.Join("..", "..", "examples", "kev.json"))
+	if err != nil {
+		t.Fatalf("load kev: %v", err)
+	}
+	return c
+}
+
+func TestKEVNoteMarksOnlyOpenStatements(t *testing.T) {
+	doc, _, err := Generate(exampleFindings(t), exampleTriage(t), Options{
+		ProductID: productID,
+		Author:    "Acme Software GmbH",
+		Timestamp: fixedTime,
+		KEV:       exampleKEV(t),
+	})
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	for _, st := range doc.Statements {
+		switch st.Vulnerability.Name {
+		case "CVE-2023-44487": // KEV-listed and under_investigation
+			if !strings.Contains(st.StatusNotes, "since 2023-10-10 (catalog 2026.11.10)") ||
+				!strings.Contains(st.StatusNotes, "Article 14") {
+				t.Errorf("CVE-2023-44487 status_notes = %q, want the KEV marker", st.StatusNotes)
+			}
+		case "CVE-2021-44228": // KEV-listed but triaged not_affected
+			if st.StatusNotes != "" {
+				t.Errorf("not_affected statement carries status_notes %q", st.StatusNotes)
+			}
+		default:
+			if st.StatusNotes != "" {
+				t.Errorf("%s is not KEV-listed but carries status_notes %q", st.Vulnerability.Name, st.StatusNotes)
+			}
+		}
+	}
+	if n := doc.KEVListed(); n != 1 {
+		t.Errorf("KEVListed = %d, want 1", n)
+	}
+}
+
+func TestKEVNoteOnAffectedStatement(t *testing.T) {
+	tr := &Triage{Statements: []TriageEntry{
+		{Vulnerability: "CVE-2021-44228", Status: StatusAffected, Action: "Upgrade log4j-core to 2.17.1."},
+	}}
+	doc, _, err := Generate(exampleFindings(t), tr, Options{
+		ProductID: productID, Author: "Acme Software GmbH", Timestamp: fixedTime, KEV: exampleKEV(t),
+	})
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	for _, st := range doc.Statements {
+		if st.Vulnerability.Name == "CVE-2021-44228" && !strings.Contains(st.StatusNotes, "since 2021-12-10") {
+			t.Errorf("affected KEV statement status_notes = %q", st.StatusNotes)
+		}
+	}
+}
+
+func TestStatusNotesRoundTrip(t *testing.T) {
+	doc, _, err := Generate(exampleFindings(t), exampleTriage(t), Options{
+		ProductID: productID, Author: "Acme Software GmbH", Timestamp: fixedTime, KEV: exampleKEV(t),
+	})
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	data, err := doc.Marshal()
+	if err != nil {
+		t.Fatalf("Marshal: %v", err)
+	}
+	if !strings.Contains(string(data), `"status_notes": "KEV: `) {
+		t.Error("status_notes is not serialised under its OpenVEX name")
+	}
+	back, err := Parse(data)
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	if back.KEVListed() != 1 {
+		t.Errorf("KEVListed after round trip = %d, want 1", back.KEVListed())
+	}
+}
+
+func TestNoKEVCatalogLeavesNotesEmpty(t *testing.T) {
+	doc, _ := generate(t, exampleFindings(t), exampleTriage(t))
+	if doc.KEVListed() != 0 {
+		t.Error("statements were KEV-marked without a catalog")
 	}
 }
